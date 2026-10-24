@@ -23,6 +23,7 @@ describe("tone contrast", () => {
   // re-seeded onto the Ziki brand ramp (app/theme-brand.css), so they use the
   // brand's light-mode values here.
   const hex: Record<string, string> = {
+    "teal-100": "#cbf6fb", "teal-800": "#005860",
     "teal-100": "#dbe7fd", "teal-800": "#1d4695",
     "sky-100": "#e0f2fe", "sky-800": "#075985",
     "indigo-100": "#e0e7ff", "indigo-800": "#3730a3",

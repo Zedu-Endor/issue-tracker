@@ -39,6 +39,10 @@ const TAILWIND_COLORS: Record<string, string> = {
   // Emerald
   "emerald-100": "#d1fae5",
   "emerald-950": "#022c22",
+  // Teal — the brand scale (#475), generated in app/theme-brand.css
+  "teal-50": "#e8fbfd",
+  "teal-100": "#cbf6fb",
+  "teal-950": "#00383e",
   // Teal (brand ramp: Electric Blue)
   "teal-50": "#edf3fe",
   "teal-100": "#dbe7fd",
