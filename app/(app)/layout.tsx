@@ -10,16 +10,14 @@ import { MAIN_CONTENT_ID, SkipLink } from "@/components/skip-link";
 import { PAGE_CONTAINER_CLASS } from "@/components/page-container";
 import { FocusMainOnNavigate } from "@/components/focus-main-on-navigate";
 import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
-import { isAdmin } from "@/lib/roles";
+import { isAdmin, type AppRole } from "@/lib/roles";
 import type { WorkspaceChoice } from "@/components/workspace-switcher";
 import { prisma } from "@/lib/prisma";
 import { currentTenantIdFor } from "@/lib/tenant-context";
 import { tenantsForUser } from "@/lib/tenants";
 import { countPendingEscalations } from "@/lib/agent-questions";
-import { loadOwnAgents, loadSidebarCounts } from "@/lib/dashboard-overview";
-import { pointTotals, tenantRankFor } from "@/lib/points/leaderboard";
-import { getPlatformRewardConfig } from "@/lib/points/platform-rewards";
-import { TARGET_POINTS } from "@/lib/points/rules";
+import { loadSidebarCounts } from "@/lib/dashboard-overview";
+import { pointTotals } from "@/lib/points/leaderboard";
 
 export default async function AppLayout({
   children,
@@ -73,17 +71,8 @@ export default async function AppLayout({
   }
 
   let pendingEscalationsCount = 0;
-  let points = 0;
-  let solvedTasks = 0;
-  let rank: number | null = null;
   let issueCount = 0;
-  let shellAgents: { id: string; name: string; level: string }[] = [];
-  let targetPoints = TARGET_POINTS;
-  try {
-    targetPoints = (await getPlatformRewardConfig(prisma)).target;
-  } catch (error) {
-    console.error("[layout] platform rewards failed", error);
-  }
+  let points = 0;
   if (tenantId) {
     try {
       pendingEscalationsCount = await countPendingEscalations(user.id, tenantId);
@@ -93,25 +82,13 @@ export default async function AppLayout({
     try {
       const totals = await pointTotals(prisma, tenantId, user.id);
       points = totals.points;
-      solvedTasks = totals.solvedTasks;
     } catch (error) {
       console.error("[layout] points failed", error);
-    }
-    try {
-      rank = (await tenantRankFor(prisma, tenantId, user.id))?.rank ?? null;
-    } catch (error) {
-      console.error("[layout] rank failed", error);
     }
     try {
       issueCount = (await loadSidebarCounts({ userId: user.id, tenantId })).unresolved;
     } catch (error) {
       console.error("[layout] issue count failed", error);
-    }
-    try {
-      const agents = await loadOwnAgents({ userId: user.id, tenantId });
-      shellAgents = agents.map((agent) => ({ id: agent.id, name: agent.name, level: agent.level }));
-    } catch (error) {
-      console.error("[layout] agents failed", error);
     }
   }
 
@@ -132,26 +109,20 @@ export default async function AppLayout({
       <SkipLink />
       <AppSidebar
         issueCount={issueCount}
-        workspaces={workspaces}
-        activeTenantId={activeTenantId}
+        pendingEscalationsCount={pendingEscalationsCount}
       />
       <div className="flex min-w-0 flex-1 flex-col">
         <AppHeader
           userName={user.name ?? user.email}
           userImage={user.image}
-          role={user.role}
+          role={user.role as AppRole}
           isRealSuperAdmin={user.isRealSuperAdmin}
           isRealAdmin={user.isRealAdmin}
-          unreadCount={unreadCount}
-          pendingEscalationsCount={pendingEscalationsCount}
           userId={user.id}
           workspaces={workspaces}
           activeTenantId={activeTenantId}
           points={points}
-          solvedTasks={solvedTasks}
-          targetPoints={targetPoints}
-          rank={rank}
-          agents={shellAgents}
+          unreadCount={unreadCount}
           reportFormUrl={REPORT_FORM_URL}
         />
         <main
